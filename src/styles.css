@@ -1987,6 +1987,170 @@ img {
   padding: 4px 8px;
 }
 
+/* ---------- Profile ---------- */
+
+.signin-bar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: start;
+  transition: transform 0.12s ease, border-color 0.15s ease;
+}
+
+.signin-bar:active {
+  transform: scale(0.985);
+  border-color: var(--line-strong);
+}
+
+.signin-avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(140deg, #e02737 0%, #a30f1b 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 8px 16px -10px rgba(211, 28, 43, 0.85);
+}
+
+.signin-avatar.pending {
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px dashed var(--line-strong);
+  box-shadow: none;
+}
+
+.signin-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.55;
+}
+
+.signin-text strong {
+  font-size: 13px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signin-text small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.signin-cta {
+  flex: none;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--red-soft);
+  color: var(--red);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-avatar {
+  flex: none;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 17px;
+  background: linear-gradient(140deg, #e02737 0%, #a30f1b 100%);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 10px 20px -12px rgba(211, 28, 43, 0.9);
+}
+
+.profile-avatar.empty {
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px dashed var(--line-strong);
+  box-shadow: none;
+}
+
+.profile-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.55;
+}
+
+.profile-body strong {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.phone-box {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 10px 0 12px;
+  padding: 11px 12px;
+  background: #f7f9fb;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  color: var(--soft-text);
+}
+
+.phone-box svg {
+  flex: none;
+  color: var(--green);
+}
+
+.phone-value {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.phone-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.danger-text {
+  color: var(--red);
+}
+
+.check-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--soft-text);
+}
+
+.check-line input {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--red);
+}
+
 /* ---------- Toast ---------- */
 
 .toast {

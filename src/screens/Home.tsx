@@ -1,8 +1,9 @@
 import { Icon } from '../components/Icon';
 import { guides } from '../content/guides';
-import { haptic } from '../lib/eitaa';
+import { haptic, isEitaa } from '../lib/eitaa';
 import { useMode } from '../lib/mode';
 import { useNav } from '../lib/nav';
+import { useProfile } from '../lib/profile';
 import type { Route } from '../lib/router';
 import type { IconName, Tone } from '../types';
 
@@ -64,6 +65,23 @@ const criticalGuides = guides.filter((g) => ['cpr', 'choking', 'bleeding', 'burn
 export function Home() {
   const go = useNav();
   const { mode, setMode } = useMode();
+  const { name, phone } = useProfile();
+  const inEitaa = isEitaa();
+  const initial = name?.trim().charAt(0) ?? '';
+
+  const accountTitle = name
+    ? `سلام، ${name}`
+    : phone
+      ? 'پروفایل امدادگر'
+      : inEitaa
+        ? 'ورود به امداد یار'
+        : 'پروفایل من';
+  const accountSub = phone
+    ? 'شماره ایتا ثبت شده است'
+    : inEitaa
+      ? 'اشتراک شماره ایتا؛ اختیاری'
+      : 'فقط داخل ایتا فعال است';
+  const accountCta = phone ? 'پروفایل' : inEitaa ? 'ورود' : 'راهنما';
 
   return (
     <>
@@ -125,6 +143,17 @@ export function Home() {
           </button>
         </div>
       </section>
+
+      <button type="button" className="signin-bar" onClick={() => go({ name: 'account' })}>
+        <span className={`signin-avatar ${name ? '' : 'pending'}`} aria-hidden="true">
+          {name ? initial : <Icon name="user" size={18} />}
+        </span>
+        <span className="signin-text">
+          <strong>{accountTitle}</strong>
+          <small>{accountSub}</small>
+        </span>
+        <span className="signin-cta">{accountCta}</span>
+      </button>
 
       <section className="section" aria-labelledby="quick-title">
         <div className="section-head">

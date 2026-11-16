@@ -7,9 +7,19 @@ export type Route =
   | { name: 'request' }
   | { name: 'checklist' }
   | { name: 'quiz' }
+  | { name: 'account' }
   | { name: 'about' };
 
-const knownTopLevel = new Set(['guides', 'emergency', 'numbers', 'request', 'checklist', 'quiz', 'about']);
+const knownTopLevel = new Set([
+  'guides',
+  'emergency',
+  'numbers',
+  'request',
+  'checklist',
+  'quiz',
+  'account',
+  'about',
+]);
 
 export const parseHash = (hash: string = window.location.hash): Route => {
   const raw = hash.replace(/^#\/?/, '');

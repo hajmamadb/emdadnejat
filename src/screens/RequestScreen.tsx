@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Icon } from '../components/Icon';
 import { Toast } from '../components/Toast';
-import { formatDateTime } from '../lib/fa';
+import { formatDateTime, toFa } from '../lib/fa';
 import { haptic, openExternal } from '../lib/eitaa';
+import { useProfile } from '../lib/profile';
 import { useToast } from '../lib/useToast';
 
 const incidentTypes = [
@@ -40,7 +41,9 @@ function fallbackCopy(text: string): boolean {
 }
 
 export function RequestScreen() {
-  const [name, setName] = useState('');
+  const { name: savedName, phone } = useProfile();
+  const [name, setName] = useState(savedName ?? '');
+  const [withPhone, setWithPhone] = useState(Boolean(phone));
   const [incident, setIncident] = useState(incidentTypes[0]);
   const [injured, setInjured] = useState('');
   const [place, setPlace] = useState('');
@@ -61,6 +64,7 @@ export function RequestScreen() {
     `نوع حادثه: ${incident}`,
     injured.trim() ? `تعداد مصدوم: ${injured.trim()}` : '',
     name.trim() ? `نام تماس‌گیرنده: ${name.trim()}` : '',
+    withPhone && phone ? `شماره تماس: ${toFa(phone)}` : '',
     `موقعیت: ${coordsText}`,
     place.trim() ? `نشانی/نشانه محل: ${place.trim()}` : '',
     mapLink ? `نقشه: ${mapLink}` : '',
@@ -163,6 +167,21 @@ export function RequestScreen() {
               autoComplete="name"
             />
           </div>
+
+          {phone ? (
+            <label className="check-line">
+              <input
+                type="checkbox"
+                checked={withPhone}
+                onChange={(e) => setWithPhone(e.target.checked)}
+              />
+              <span>درج شماره ایتای من ({toFa(phone)}) در پیام</span>
+            </label>
+          ) : (
+            <span className="hint">
+              برای درج شماره تماس در پیام، از «پروفایل من» در صفحه اصلی شماره ایتا را به اشتراک بگذارید.
+            </span>
+          )}
 
           <div className="form-row">
             <div className="field">

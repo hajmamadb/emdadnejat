@@ -3,9 +3,11 @@ import { Icon } from './components/Icon';
 import { guideById } from './content/guides';
 import { haptic, initEitaa, setNavBack } from './lib/eitaa';
 import { ModeProvider } from './lib/mode';
+import { ProfileProvider } from './lib/profile';
 import { NavContext } from './lib/nav';
 import { navigate, parentOf, parseHash, type Route } from './lib/router';
 import { AboutScreen } from './screens/AboutScreen';
+import { AccountScreen } from './screens/AccountScreen';
 import { ChecklistScreen } from './screens/ChecklistScreen';
 import { EmergencyScreen } from './screens/EmergencyScreen';
 import { GuideDetail } from './screens/GuideDetail';
@@ -60,6 +62,9 @@ function TopBar({ route, onNavigate }: { route: Route; onNavigate: (route: Route
       break;
     case 'quiz':
       title = 'آزمون آموزشی';
+      break;
+    case 'account':
+      title = 'پروفایل من';
       break;
     case 'about':
       title = 'درباره و راهنما';
@@ -135,6 +140,8 @@ export default function App() {
         return <ChecklistScreen />;
       case 'quiz':
         return <QuizScreen />;
+      case 'account':
+        return <AccountScreen />;
       case 'about':
         return <AboutScreen />;
       default:
@@ -144,12 +151,14 @@ export default function App() {
 
   return (
     <ModeProvider>
-      <NavContext.Provider value={go}>
-        <div className="app">
-          <TopBar route={route} onNavigate={go} />
-          <main className="content">{renderScreen()}</main>
-        </div>
-      </NavContext.Provider>
+      <ProfileProvider>
+        <NavContext.Provider value={go}>
+          <div className="app">
+            <TopBar route={route} onNavigate={go} />
+            <main className="content">{renderScreen()}</main>
+          </div>
+        </NavContext.Provider>
+      </ProfileProvider>
     </ModeProvider>
   );
 }
