@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { Toast } from '../components/Toast';
 import { formatDateTime, toFa } from '../lib/fa';
 import { haptic, openExternal } from '../lib/eitaa';
+import { watchDeviceLocation } from '../lib/geo';
+import type { GeoFix } from '../lib/geo';
 import { useProfile } from '../lib/profile';
 import { useToast } from '../lib/useToast';
 
@@ -17,10 +19,15 @@ const incidentTypes = [
   'سایر',
 ];
 
-interface Coords {
-  lat: number;
-  lng: number;
-  accuracy?: number;
+function accuracyLabel(accuracy: number): { text: string; coarse: boolean } {
+  const meters = Math.round(accuracy);
+  if (meters <= 20) return { text: `دقت GPS: حدود ${toFa(meters)} متر`, coarse: false };
+  if (meters <= 100) return { text: `دقت موقعیت: حدود ${toFa(meters)} متر`, coarse: false };
+  if (meters <= 500) return { text: `دقت متوسط: حدود ${toFa(meters)} متر`, coarse: false };
+  return {
+    text: `دقت کم: حدود ${toFa(meters)} متر — این موقعیت تقریبی است؛ GPS گوشی را روشن کنید و در فضای باز بایستید`,
+    coarse: true,
+  };
 }
 
 function fallbackCopy(text: string): boolean {
@@ -48,16 +55,20 @@ export function RequestScreen() {
   const [injured, setInjured] = useState('');
   const [place, setPlace] = useState('');
   const [desc, setDesc] = useState('');
-  const [coords, setCoords] = useState<Coords | null>(null);
+  const [coords, setCoords] = useState<GeoFix | null>(null);
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState<string | null>(null);
+  const stopWatchRef = useRef<(() => void) | null>(null);
   const { message, show } = useToast();
+
+  useEffect(() => () => stopWatchRef.current?.(), []);
 
   const mapLink = coords
     ? `https://www.openstreetmap.org/?mlat=${coords.lat}&mlon=${coords.lng}#map=17/${coords.lat}/${coords.lng}`
     : '';
 
   const coordsText = coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : 'ثبت نشده';
+  const accuracy = coords ? accuracyLabel(coords.accuracy) : null;
 
   const requestText = [
     'درخواست امداد',
@@ -76,34 +87,38 @@ export function RequestScreen() {
     .join('\n');
 
   const locate = () => {
-    if (!('geolocation' in navigator)) {
-      setLocError('دستگاه شما از موقعیت‌یابی پشتیبانی نمی‌کند. نشانی محل را دستی وارد کنید.');
-      haptic('error');
+    if (locating) {
+      stopWatchRef.current?.();
       return;
     }
-    setLocating(true);
     setLocError(null);
     haptic('light');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        });
+    setLocating(true);
+    stopWatchRef.current = watchDeviceLocation({
+      onFix: (fix) => setCoords(fix),
+      onEnd: (best, failure) => {
+        stopWatchRef.current = null;
         setLocating(false);
-        show('موقعیت مکانی ثبت شد');
-        haptic('success');
+        if (best) {
+          setCoords(best);
+          show(best.accuracy <= 100 ? 'موقعیت GPS ثبت شد' : 'موقعیت تقریبی ثبت شد؛ برای دقت بیشتر GPS را روشن کنید');
+          haptic('success');
+          return;
+        }
+        if (failure === 'unsupported') {
+          setLocError('دستگاه شما از موقعیت‌یابی پشتیبانی نمی‌کند. نشانی محل را دستی وارد کنید.');
+        } else if (failure === 'denied') {
+          setLocError(
+            'اجازه دسترسی به موقعیت داده نشد. در تنظیمات دستگاه یا مرورگر اجازه موقعیت مکانی را فعال کنید یا نشانی محل را دستی وارد کنید.',
+          );
+        } else if (failure === 'unavailable') {
+          setLocError(
+            'موقعیت GPS دریافت نشد. GPS گوشی را روشن کنید، در فضای باز بایستید و دوباره تلاش کنید یا نشانی محل را دستی وارد کنید.',
+          );
+        }
+        if (failure) haptic('error');
       },
-      () => {
-        setLocating(false);
-        setLocError(
-          'دسترسی به موقعیت ممکن نشد. اجازه دسترسی مرورگر را بررسی کنید یا نشانی محل را دستی وارد کنید.',
-        );
-        haptic('error');
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 },
-    );
+    });
   };
 
   const copyRequest = async () => {
@@ -244,9 +259,11 @@ export function RequestScreen() {
                     <span className="coords">
                       {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
                     </span>
-                    {coords.accuracy ? (
-                      <div className="hint">دقت تقریبی: حدود {Math.round(coords.accuracy)} متر</div>
-                    ) : null}
+                    {accuracy && (
+                      <div className="hint" style={accuracy.coarse ? { color: 'var(--amber)' } : undefined}>
+                        {accuracy.text}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <span>برای درج دقیق موقعیت، دکمه زیر را بزنید.</span>
@@ -254,9 +271,9 @@ export function RequestScreen() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={locate} disabled={locating}>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={locate}>
                 <Icon name="location" size={15} />
-                {locating ? 'در حال دریافت…' : coords ? 'به‌روزرسانی موقعیت' : 'دریافت موقعیت من'}
+                {locating ? 'توقف دریافت' : coords ? 'به‌روزرسانی موقعیت' : 'دریافت موقعیت از GPS'}
               </button>
               {coords && mapLink && (
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => openExternal(mapLink)}>
@@ -265,8 +282,18 @@ export function RequestScreen() {
               )}
             </div>
             {locError && <div className="hint" style={{ color: 'var(--red)' }}>{locError}</div>}
-            {!coords && (
-              <span className="hint">برای موقعیت‌یابی، برنامک باید با HTTPS باز شود.</span>
+            {locating && (
+              <span className="hint">
+                {coords
+                  ? 'در حال بهبود دقت موقعیت…'
+                  : 'در حال جست‌وجوی GPS… ممکن است تا ۳۰ ثانیه طول بکشد.'}
+              </span>
+            )}
+            {!coords && !locating && (
+              <span className="hint">
+                موقعیت از GPS گوشی گرفته می‌شود. GPS و اجازه دسترسی به موقعیت را روشن کنید و در فضای باز
+                بایستید (برنامک باید با HTTPS باز شود).
+              </span>
             )}
           </div>
         </div>
